@@ -3,154 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Photobooth Vercel</title>
+    <title>Super Photobooth</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --primary: #ff4757;
-            --bg: #2f3542;
-            --panel: #ffffff;
-        }
-
-        body {
-            font-family: 'Kanit', sans-serif;
-            background-color: var(--bg);
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
+        :root { --primary: #ff4757; --bg: #2f3542; --panel: #ffffff; }
+        body { font-family: 'Kanit', sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         h1 { color: white; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1000px; width: 100%; }
+        
+        /* Camera */
+        .camera-box { background: #000; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 480px; aspect-ratio: 4/3; }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .countdown { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8rem; color: white; font-weight: bold; display: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .flash { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
 
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            max-width: 1000px;
-            width: 100%;
-        }
-
-        /* --- ส่วนกล้อง --- */
-        .camera-box {
-            background: #000;
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 480px;
-            aspect-ratio: 4/3;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* กลับด้านกระจก */
-        }
-
-        .countdown {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 8rem;
-            color: white;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8);
-            display: none;
-            z-index: 10;
-        }
-
-        .flash {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.1s;
-        }
-
-        /* --- แผงควบคุม --- */
-        .controls {
-            background: var(--panel);
-            padding: 20px;
-            border-radius: 15px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
+        /* Controls */
+        .controls { background: var(--panel); padding: 20px; border-radius: 15px; width: 100%; max-width: 440px; }
         .btn-group { margin-bottom: 15px; }
         .label { font-size: 0.9rem; color: #666; margin-bottom: 5px; display: block; }
-
-        button {
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Kanit', sans-serif;
-            margin-right: 5px;
-            transition: 0.2s;
-        }
-
+        button { border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-family: 'Kanit', sans-serif; margin-right: 5px; transition: 0.2s; }
         .btn-mode { background: #eee; color: #333; }
-        .btn-mode.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4); }
-
+        .btn-mode.active { background: var(--primary); color: white; }
         .btn-color { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #ddd; padding: 0; }
         .btn-color.active { transform: scale(1.1); border-color: #333; }
-
-        .btn-capture {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            font-size: 1.2rem;
-            padding: 15px;
-            margin-top: 10px;
-            font-weight: bold;
-        }
+        .btn-capture { width: 100%; background: var(--primary); color: white; font-size: 1.2rem; padding: 15px; margin-top: 10px; font-weight: bold; }
         .btn-capture:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* --- ผลลัพธ์ --- */
-        #result-area {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            width: 100%;
-            max-width: 440px;
-        }
-
-        #final-canvas {
-            width: 100%;
-            border-radius: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        #qr-container {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f1f2f6;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .loading-text { color: #666; font-size: 0.9rem; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
+        /* Result */
+        #result-area { display: none; flex-direction: column; align-items: center; background: white; padding: 20px; border-radius: 15px; margin-top: 20px; width: 100%; max-width: 440px; box-sizing: border-box; }
+        #final-canvas { width: 100%; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #gif-preview { width: 100%; border-radius: 5px; margin-top: 10px; display: none; }
+        #qr-container { margin-top: 20px; padding: 15px; background: #f1f2f6; border-radius: 10px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
+        .loading-text { color: #666; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -166,9 +53,9 @@
 
         <div class="controls">
             <div class="btn-group">
-                <span class="label">1. เลือกจำนวนรูป</span>
-                <button class="btn-mode active" onclick="setMode(1, this)">รูปเดี่ยว (1 Shot)</button>
-                <button class="btn-mode" onclick="setMode(4, this)">ตู้สติ๊กเกอร์ (4 Shots)</button>
+                <span class="label">1. เลือกโหมด</span>
+                <button class="btn-mode active" onclick="setMode(1, this)">รูปเดี่ยว</button>
+                <button class="btn-mode" onclick="setMode(4, this)">4 ช็อต + GIF</button>
             </div>
 
             <div class="btn-group">
@@ -186,6 +73,7 @@
     <div id="result-area">
         <h3>✨ รูปของคุณเสร็จแล้ว!</h3>
         <canvas id="final-canvas"></canvas>
+        <img id="gif-preview" alt="GIF Animation">
         
         <div id="qr-container">
             <div id="qrcode"></div>
@@ -196,10 +84,16 @@
     </div>
 
     <script>
-        // Setup Variables
+        // ==========================================
+        // ✏️ แก้ไขข้อความตรงนี้ได้เลยครับ
+        // ==========================================
+        const customTitle = "CVC-NU 2024"; // เปลี่ยนเป็นคำที่ต้องการ
+        // ==========================================
+
         const video = document.getElementById('video');
         const canvas = document.getElementById('final-canvas');
         const ctx = canvas.getContext('2d');
+        const gifPreview = document.getElementById('gif-preview');
         const countdownEl = document.getElementById('countdown');
         const flashEl = document.getElementById('flash');
         const resultArea = document.getElementById('result-area');
@@ -207,16 +101,14 @@
         const qrDiv = document.getElementById('qrcode');
         const btnStart = document.getElementById('btn-start');
 
-        let currentMode = 1; // 1 or 4
+        let currentMode = 1;
         let frameColor = 'white';
-        let capturedImages = []; // Array to store snapshots
+        let capturedImages = []; 
 
-        // 1. Start Camera
         navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
             .then(stream => video.srcObject = stream)
             .catch(err => alert("กรุณาอนุญาตให้เข้าถึงกล้อง"));
 
-        // 2. Settings Functions
         function setMode(mode, btn) {
             currentMode = mode;
             document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
@@ -229,22 +121,27 @@
             btn.classList.add('active');
         }
 
-        // 3. Main Process
         async function startPhotoProcess() {
             capturedImages = [];
             btnStart.disabled = true;
             resultArea.style.display = 'none';
             qrDiv.innerHTML = "";
+            gifPreview.style.display = 'none';
             qrStatus.innerText = "รอสักครู่...";
 
-            // Loop taking photos
             for (let i = 0; i < currentMode; i++) {
                 await countdown(3);
                 captureShot();
-                if (i < currentMode - 1) await delay(1000); // Wait between shots
+                if (i < currentMode - 1) await delay(1000);
             }
 
             processFinalImage();
+            
+            // ถ้าถ่าย 4 ช็อต ให้สร้าง GIF ด้วย
+            if (currentMode === 4) {
+                createGIF();
+            }
+            
             btnStart.disabled = false;
         }
 
@@ -256,44 +153,33 @@
                 const timer = setInterval(() => {
                     c--;
                     if (c > 0) countdownEl.innerText = c;
-                    else {
-                        clearInterval(timer);
-                        countdownEl.style.display = 'none';
-                        resolve();
-                    }
+                    else { clearInterval(timer); countdownEl.style.display = 'none'; resolve(); }
                 }, 1000);
             });
         }
 
         function captureShot() {
-            // Create temporary canvas for single shot
             const tCanvas = document.createElement('canvas');
             tCanvas.width = video.videoWidth;
             tCanvas.height = video.videoHeight;
             const tCtx = tCanvas.getContext('2d');
-            
-            // Mirror image
             tCtx.translate(tCanvas.width, 0);
             tCtx.scale(-1, 1);
             tCtx.drawImage(video, 0, 0);
-            
             capturedImages.push(tCanvas);
             
-            // Flash Effect
             flashEl.style.opacity = 1;
             setTimeout(() => flashEl.style.opacity = 0, 150);
         }
 
         function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-        // 4. Combine Images & Draw Frame
         function processFinalImage() {
             const padding = 40;
             const gap = 20;
             const imgW = 640;
             const imgH = 480;
 
-            // Calculate Total Size
             const totalW = imgW + (padding * 2);
             const totalH = (currentMode === 1) 
                 ? imgH + (padding * 2) + 80 
@@ -302,38 +188,51 @@
             canvas.width = totalW;
             canvas.height = totalH;
 
-            // Draw Background (Frame)
             ctx.fillStyle = frameColor;
             ctx.fillRect(0, 0, totalW, totalH);
 
-            // Draw Images
             capturedImages.forEach((img, i) => {
                 const y = padding + (i * (imgH + gap));
                 ctx.drawImage(img, padding, y, imgW, imgH);
             });
 
-            // Draw Text/Date
             ctx.fillStyle = (frameColor === 'white') ? '#333' : 'white';
             ctx.font = 'bold 30px Kanit';
             ctx.textAlign = 'center';
-            ctx.fillText("MY PHOTOBOOTH", totalW / 2, totalH - 45);
+            // ใช้ตัวแปรชื่อ customTitle ที่เราตั้งไว้ข้างบน
+            ctx.fillText(customTitle, totalW / 2, totalH - 45);
             ctx.font = '20px Kanit';
             ctx.fillText(new Date().toLocaleDateString('th-TH'), totalW / 2, totalH - 20);
 
-            // Show Result
             resultArea.style.display = 'flex';
             resultArea.scrollIntoView({ behavior: 'smooth' });
 
-            // Start Upload
-            uploadToServer();
+            uploadToServer(canvas.toDataURL('image/png'));
         }
 
-        // 5. Upload to Vercel & Generate QR
-        async function uploadToServer() {
-            qrStatus.innerText = "⏳ กำลังอัปโหลดรูป...";
-            const dataUrl = canvas.toDataURL('image/png');
+        function createGIF() {
+            // ดึงภาพจากที่ถ่ายไว้มาทำ GIF
+            const images = capturedImages.map(c => c.toDataURL());
+            
+            gifshot.createGIF({
+                images: images,
+                interval: 0.5, // ความเร็ว (วินาทีต่อภาพ)
+                gifWidth: 320, // ลดขนาดลงหน่อยจะได้ไม่หนัก
+                numFrames: 10
+            }, function(obj) {
+                if(!obj.error) {
+                    gifPreview.src = obj.image;
+                    gifPreview.style.display = 'block';
+                    // หมายเหตุ: GIF ไม่ได้ถูกอัปโหลดไป Server ในเวอร์ชันนี้เพื่อประหยัดพื้นที่
+                }
+            });
+        }
 
+        async function uploadToServer(dataUrl) {
+            qrStatus.innerText = "⏳ กำลังอัปโหลดรูป...";
+            
             try {
+                // เรียก API ที่เราย้ายเข้าไปในโฟลเดอร์ api/ แล้ว
                 const res = await fetch('/api/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -344,11 +243,7 @@
 
                 if (data.url) {
                     qrStatus.innerText = "✅ สแกนเพื่อดาวน์โหลด";
-                    new QRCode(qrDiv, {
-                        text: data.url,
-                        width: 150,
-                        height: 150
-                    });
+                    new QRCode(qrDiv, { text: data.url, width: 150, height: 150 });
                 } else {
                     throw new Error("Upload Failed");
                 }
