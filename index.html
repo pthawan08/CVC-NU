@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentine Photo Booth Pro</title>
+    <title>Valentine Photo Booth (Pro Ratio)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Kanit:wght@300;500&display=swap" rel="stylesheet">
@@ -14,26 +14,40 @@
         
         h1 { font-family: 'Mali', cursive; color: #d63031; text-shadow: 2px 2px 0 white; margin-bottom: 10px; }
 
-        /* Camera Area */
-        .stage { background: #000; border-radius: 15px; overflow: hidden; position: relative; width: 100%; max-width: 480px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        video { width: 100%; height: auto; transform: scaleX(-1); display: block; }
+        /* --- แก้ไขส่วนกล้องให้แสดงผลแบบครอปพอดี (ไม่ยืด) --- */
+        .stage { 
+            background: #000; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            position: relative; 
+            width: 100%; 
+            max-width: 640px; /* ขยายให้เห็นชัดขึ้น */
+            aspect-ratio: 4/3; /* บังคับกรอบเป็น 4:3 */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+        }
         
-        /* Editor Area */
+        video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* กุญแจสำคัญ: ขยายเต็มกรอบโดยไม่ยืด (ตัดขอบออก) */
+            transform: scaleX(-1); 
+            display: block; 
+        }
+        
         #editor-area { display: none; background: white; padding: 20px; border-radius: 15px; max-width: 600px; width: 100%; box-shadow: 0 10px 20px rgba(0,0,0,0.1); flex-direction: column; align-items: center; }
         
         canvas { max-width: 100%; height: auto; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        /* Toolbars */
         .tool-section { border-bottom: 1px dashed #ddd; padding-bottom: 15px; margin-bottom: 15px; width: 100%; text-align: center; }
         .label { font-size: 1rem; color: #d63031; display: block; margin-bottom: 8px; font-weight: bold; font-family: 'Mali'; }
 
         .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
         
-        /* Camera Select Dropdown */
+        /* Camera Select */
         select.camera-select {
             padding: 8px 15px; border-radius: 20px; border: 2px solid #ff7675;
             font-family: 'Kanit'; font-size: 0.9rem; color: #d63031; background: white;
-            cursor: pointer; width: 80%; max-width: 300px;
+            cursor: pointer; width: 80%; max-width: 300px; margin-bottom: 10px;
         }
 
         button { border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Kanit'; font-size: 0.9rem; transition: 0.2s; background: #eee; color: #555; }
@@ -45,7 +59,6 @@
         .btn-save { background: #00b894; color: white; }
         .btn-reset { background: #636e72; color: white; }
 
-        /* QR Area */
         #qr-area { display: none; margin-top: 20px; text-align: center; background: #f5f6fa; padding: 20px; border-radius: 15px; width: 100%; box-sizing: border-box; }
         #qrcode { display: flex; justify-content: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 10px; width: fit-content; margin: 0 auto 15px auto; }
         
@@ -106,12 +119,10 @@
 
         <div id="qr-area">
             <p style="margin-bottom:10px; font-weight:bold; color:#333;">สแกนเพื่อดาวน์โหลด:</p>
-            
             <div class="qr-switcher" id="qr-switcher" style="display:none;">
                 <button class="qr-btn active" onclick="showQR('img', this)">🖼️ รูปภาพ</button>
                 <button class="qr-btn" onclick="showQR('gif', this)">🎞️ GIF ดุ๊กดิ๊ก</button>
             </div>
-
             <div id="qrcode"></div>
             <p id="status-text" class="status">กำลังอัปโหลด...</p>
         </div>
@@ -143,14 +154,11 @@
         let finalGifUrl = "";
         let currentStream = null;
 
-        // เริ่มต้น: ขอสิทธิ์กล้องก่อน แล้วค่อยโหลดรายชื่อกล้อง
         initCamera();
 
         async function initCamera() {
             try {
-                // ขอสิทธิ์เปิดกล้องตัวแรกก่อน
                 await startStream(); 
-                // พอได้สิทธิ์แล้ว ค่อยลิสต์รายชื่อกล้องทั้งหมดมาใส่ Dropdown
                 await getCameraDevices();
             } catch (err) {
                 alert("กรุณาอนุญาตให้ใช้กล้อง");
@@ -158,15 +166,15 @@
         }
 
         async function startStream(deviceId = null) {
-            // หยุดกล้องตัวเก่าก่อน (ถ้ามี)
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
-
+            // ขอความละเอียดสูงไว้ก่อน (HD)
             const constraints = { 
-                video: deviceId ? { deviceId: { exact: deviceId } } : { width: 1280, height: 720 }
+                video: deviceId 
+                    ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } 
+                    : { width: { ideal: 1280 }, height: { ideal: 720 } }
             };
-
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             currentStream = stream;
             video.srcObject = stream;
@@ -175,9 +183,7 @@
         async function getCameraDevices() {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
-            
             cameraDropdown.innerHTML = '';
-            
             videoDevices.forEach((device, index) => {
                 const option = document.createElement('option');
                 option.value = device.deviceId;
@@ -193,7 +199,6 @@
 
         async function startCameraSequence() {
             photos = [];
-            // ซ่อนปุ่มเปลี่ยนกล้องตอนกำลังถ่าย
             cameraSelectArea.style.display = 'none';
             
             for (let i = 0; i < 4; i++) {
@@ -215,14 +220,38 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ==========================================
+        // 🛠️ ส่วนสำคัญที่แก้เรื่องรูปยืด (Smart Crop)
+        // ==========================================
         function captureFrame() {
+            // เป้าหมายคือ 4:3 (640x480)
+            const targetW = 640;
+            const targetH = 480;
+            
             const tCanvas = document.createElement('canvas');
-            tCanvas.width = video.videoWidth;
-            tCanvas.height = video.videoHeight;
+            tCanvas.width = targetW;
+            tCanvas.height = targetH;
             const tCtx = tCanvas.getContext('2d');
-            tCtx.translate(tCanvas.width, 0);
-            tCtx.scale(-1, 1);
-            tCtx.drawImage(video, 0, 0);
+
+            // ขนาดจริงของวิดีโอที่มา
+            const vidW = video.videoWidth;
+            const vidH = video.videoHeight;
+
+            // คำนวณอัตราส่วนเพื่อการ Crop (Cover)
+            const scale = Math.max(targetW / vidW, targetH / vidH);
+            const x = (targetW / scale - vidW) / 2;
+            const y = (targetH / scale - vidH) / 2;
+
+            tCtx.scale(-1, 1); // กลับด้านกระจก
+            tCtx.translate(-targetW, 0); // เลื่อนกลับเพราะกลับด้าน
+
+            // วาดแบบ Crop (เหมือน object-fit: cover)
+            tCtx.drawImage(
+                video, 
+                0, 0, vidW, vidH,   // Source
+                x * scale, y * scale, vidW * scale, vidH * scale // Destination (ขยายเกินขอบแล้วตัดออก)
+            );
+            
             return tCanvas;
         }
 
