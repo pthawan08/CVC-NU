@@ -3,226 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentine Photobooth</title>
+    <title>Photo Booth CVC YOUTH</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&family=Mali:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Kanit:wght@300;500&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --primary: #ff4757; /* สีแดงวาเลนไทน์ */
-            --secondary: #ff7675; /* สีชมพู */
-            --bg: #ffeaa7; /* สีพื้นหลังครีมๆ */
-            --panel: #ffffff;
-        }
-
-        body {
-            font-family: 'Kanit', sans-serif;
-            background-color: #ffcccc; /* พื้นหลังชมพูอ่อน */
-            background-image: radial-gradient(#ff9999 2px, transparent 2px);
-            background-size: 30px 30px;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        h1 { 
-            font-family: 'Mali', cursive;
-            color: #d63031; 
-            margin-bottom: 10px; 
-            text-shadow: 2px 2px 0px white;
-            font-size: 2.5rem;
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            max-width: 1000px;
-            width: 100%;
-        }
+        :root { --primary: #ff7675; --bg: #ffeaa7; --panel: #fff; }
+        body { font-family: 'Kanit', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        /* Camera */
-        .camera-box {
-            background: #000;
-            border: 8px solid white;
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3);
-            width: 100%;
-            max-width: 480px;
-            aspect-ratio: 4/3;
-        }
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .countdown { 
-            position: absolute; top: 50%; left: 50%; 
-            transform: translate(-50%, -50%); 
-            font-size: 8rem; color: #ff4757; 
-            font-family: 'Mali', cursive;
-            font-weight: bold; 
-            text-shadow: 3px 3px 0px white;
-            display: none; z-index: 10; 
-        }
-        .flash { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
+        h1 { font-family: 'Mali', cursive; color: #d63031; text-shadow: 2px 2px 0 white; margin-bottom: 10px; }
+
+        /* Camera & Preview Areas */
+        .stage { background: #000; border-radius: 15px; overflow: hidden; position: relative; width: 100%; max-width: 480px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        video { width: 100%; height: auto; transform: scaleX(-1); display: block; }
+        
+        #editor-area { display: none; background: white; padding: 20px; border-radius: 15px; max-width: 600px; width: 100%; box-shadow: 0 10px 20px rgba(0,0,0,0.1); flex-direction: column; align-items: center; }
+        
+        canvas { max-width: 100%; height: auto; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
         /* Controls */
-        .controls { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .btn-group { margin-bottom: 20px; }
-        .label { font-size: 1rem; color: #d63031; margin-bottom: 8px; display: block; font-weight: bold; }
-        
-        button { border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-family: 'Kanit', sans-serif; margin-right: 5px; transition: 0.2s; font-size: 1rem;}
-        .btn-mode { background: #ffeaa7; color: #d63031; }
-        .btn-mode.active { background: var(--primary); color: white; transform: scale(1.05); }
-        
-        .btn-color { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; padding: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-color.active { transform: scale(1.2); border-color: #d63031; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 15px; width: 100%; }
+        .tool-section { border-bottom: 1px dashed #ddd; padding-bottom: 10px; margin-bottom: 10px; width: 100%; text-align: center; }
+        .label { font-size: 0.9rem; color: #666; display: block; margin-bottom: 5px; font-weight: bold; }
 
-        .btn-capture { 
-            width: 100%; background: #d63031; color: white; 
-            font-size: 1.5rem; padding: 15px; margin-top: 10px; 
-            font-family: 'Mali', cursive; border-radius: 50px;
-            box-shadow: 0 5px 0 #b71c1c;
-        }
-        .btn-capture:active { transform: translateY(5px); box-shadow: none; }
-        .btn-capture:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-
-        /* Result */
-        #result-area { display: none; flex-direction: column; align-items: center; background: white; padding: 20px; border-radius: 15px; margin-top: 20px; width: 100%; max-width: 440px; box-sizing: border-box; border: 5px dashed #ff7675; }
-        #final-canvas { width: 100%; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button { border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-family: 'Kanit'; font-size: 0.9rem; transition: 0.2s; background: #eee; color: #555; }
+        button:hover { background: #ddd; }
+        button.active { background: var(--primary); color: white; transform: scale(1.05); }
+        button.action-btn { width: 100%; font-size: 1.2rem; padding: 12px; margin-top: 10px; border-radius: 10px; }
         
-        #gif-section {
-            margin-top: 15px; width: 100%; text-align: center;
-            background: #fff0f0; padding: 10px; border-radius: 10px; display: none;
-        }
-        #gif-preview { width: 150px; border-radius: 10px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        
-        .btn-download-gif {
-            display: inline-block; background: #0984e3; color: white; 
-            padding: 8px 15px; text-decoration: none; border-radius: 8px; margin-top: 5px; font-size: 0.9rem;
-        }
+        .btn-capture { background: #d63031; color: white; font-family: 'Mali'; font-weight: bold; }
+        .btn-save { background: #0984e3; color: white; }
+        .btn-reset { background: #636e72; color: white; }
 
-        #qr-container { margin-top: 20px; padding: 15px; background: #ffeaa7; border-radius: 10px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .loading-text { color: #d63031; font-size: 0.9rem; font-weight: bold; }
+        /* QR & Loading */
+        #qr-area { display: none; margin-top: 20px; text-align: center; background: #f5f6fa; padding: 15px; border-radius: 10px; width: 100%; }
+        #qrcode img { margin: 0 auto; }
+        .status { font-size: 0.9rem; color: #d63031; margin-top: 10px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        
+        /* Layout Icons (Simple CSS Shapes) */
+        .icon-grid { display: inline-block; width: 16px; height: 16px; background: currentColor; clip-path: polygon(0 0, 45% 0, 45% 45%, 0 45%, 0 0, 55% 0, 100% 0, 100% 45%, 55% 45%, 55% 0, 0 55%, 45% 55%, 45% 100%, 0 100%, 0 55%, 55% 55%, 100% 55%, 100% 100%, 55% 100%, 55% 55%); }
+        .icon-strip { display: inline-block; width: 12px; height: 16px; border: 2px solid currentColor; border-top: 4px solid currentColor; border-bottom: 4px solid currentColor; }
+
+        /* Countdown */
+        #countdown { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8rem; color: white; font-family: 'Mali'; text-shadow: 0 0 20px black; display: none; }
     </style>
 </head>
 <body>
 
-    <h1>💖 CVC-NU Valentine 💖</h1>
+    <h1>📸 Valentine Photobooth</h1>
 
-    <div class="container">
-        <div class="camera-box">
-            <video id="video" autoplay playsinline></video>
-            <div id="countdown" class="countdown">3</div>
-            <div id="flash" class="flash"></div>
-        </div>
-
-        <div class="controls">
-            <div class="btn-group">
-                <span class="label">❤️ 1. เลือกโหมด</span>
-                <button class="btn-mode active" onclick="setMode(1, this)">รูปเดี่ยว</button>
-                <button class="btn-mode" onclick="setMode(4, this)">4 ช็อต + GIF</button>
-            </div>
-
-            <div class="btn-group">
-                <span class="label">🎨 2. สีพื้นหลัง</span>
-                <button class="btn-color active" style="background:white;" onclick="setColor('white', this)"></button>
-                <button class="btn-color" style="background:#fab1a0;" onclick="setColor('#fab1a0', this)"></button> <button class="btn-color" style="background:#ff7675;" onclick="setColor('#ff7675', this)"></button> <button class="btn-color" style="background:#d63031;" onclick="setColor('#d63031', this)"></button> <button class="btn-color" style="background:#2d3436;" onclick="setColor('#2d3436', this)"></button> </div>
-
-            <button id="btn-start" class="btn-capture" onclick="startPhotoProcess()">ถ่ายรูปเลย! 📸</button>
+    <div id="camera-page" class="stage">
+        <video id="video" autoplay playsinline></video>
+        <div id="countdown">3</div>
+        <div style="position:absolute; bottom:20px; width:100%; text-align:center;">
+            <button class="btn-capture action-btn" onclick="startCameraSequence()" style="width:80%;">ถ่ายรูป (4 ช็อต)</button>
         </div>
     </div>
 
-    <div id="result-area">
-        <h3 style="color: #d63031; font-family: 'Mali';">✨ เสร็จแล้วจ้า!</h3>
+    <div id="editor-area">
         <canvas id="final-canvas"></canvas>
-        
-        <div id="gif-section">
-            <p style="margin:0 0 5px 0; font-size:0.9rem; color:#d63031;">🎞️ ภาพดุ๊กดิ๊ก (GIF)</p>
-            <img id="gif-preview" alt="GIF Animation">
-            <br>
-            <a id="btn-download-gif" class="btn-download-gif" href="#" download="valentine-gif.gif">📥 โหลด GIF</a>
+
+        <div class="tool-section">
+            <span class="label">1. เลือกรูปแบบ (Layout)</span>
+            <div class="toolbar">
+                <button onclick="changeLayout('strip4', this)" class="active">4 ช่องยาว</button>
+                <button onclick="changeLayout('grid4', this)">4 ช่องตาราง</button>
+                <button onclick="changeLayout('strip3', this)">3 ช่องยาว</button>
+                <button onclick="changeLayout('cut2', this)">2 ช่องใหญ่</button>
+            </div>
         </div>
 
-        <div id="qr-container">
+        <div class="tool-section">
+            <span class="label">2. เลือกสติ๊กเกอร์ (Theme)</span>
+            <div class="toolbar">
+                <button onclick="changeTheme('none', this)" class="active">คลีนๆ</button>
+                <button onclick="changeTheme('love', this)">วาเลนไทน์ 💖</button>
+                <button onclick="changeTheme('cute', this)">น่ารัก 🧸</button>
+                <button onclick="changeTheme('cool', this)">เท่ๆ 😎</button>
+            </div>
+        </div>
+
+        <button id="btn-upload" class="btn-save action-btn" onclick="uploadFiles()">✅ เสร็จสิ้น & สร้าง QR Code</button>
+        <button class="btn-reset action-btn" onclick="resetBooth()" style="margin-top:10px;">ถ่ายใหม่</button>
+
+        <div id="qr-area">
             <div id="qrcode"></div>
-            <p id="qr-status" class="loading-text">กำลังเตรียม QR Code...</p>
+            <p id="status-text" class="status">กำลังอัปโหลด...</p>
+            <div id="link-buttons" style="display:none; margin-top:10px; gap:10px; justify-content:center;">
+                <a id="dl-img" href="#" target="_blank"><button>ดูรูปภาพ</button></a>
+                <a id="dl-gif" href="#" target="_blank"><button style="background:#6c5ce7; color:white;">ดู GIF ดุ๊กดิ๊ก</button></a>
+            </div>
+            <p style="font-size:0.8rem; color:#888; margin-top:5px;">*สแกน QR เพื่อรับรูปภาพ</p>
         </div>
-
-        <button onclick="resetBooth()" style="background:#dfe6e9; color:#636e72; margin-top:15px; width:100%;">🔄 ถ่ายใหม่อีกครั้ง</button>
     </div>
 
     <script>
-        // ==========================================
-        // ✏️ ตั้งค่าข้อความธีมวาเลนไทน์
-        // ==========================================
-        const customTitle = "Rooted in Love"; 
-        const subTitle = "nuchristianclub"; 
-        // ==========================================
-
         const video = document.getElementById('video');
+        const editorArea = document.getElementById('editor-area');
+        const cameraPage = document.getElementById('camera-page');
         const canvas = document.getElementById('final-canvas');
         const ctx = canvas.getContext('2d');
-        const gifSection = document.getElementById('gif-section');
-        const gifPreview = document.getElementById('gif-preview');
-        const gifDownloadBtn = document.getElementById('btn-download-gif');
-        
         const countdownEl = document.getElementById('countdown');
-        const flashEl = document.getElementById('flash');
-        const resultArea = document.getElementById('result-area');
-        const qrStatus = document.getElementById('qr-status');
-        const qrDiv = document.getElementById('qrcode');
-        const btnStart = document.getElementById('btn-start');
+        const qrArea = document.getElementById('qr-area');
+        const statusText = document.getElementById('status-text');
+        const btnUpload = document.getElementById('btn-upload');
 
-        let currentMode = 1;
-        let frameColor = 'white';
-        let capturedImages = []; 
+        let photos = []; // เก็บรูป 4 ช็อตที่ถ่ายมา
+        let currentLayout = 'strip4';
+        let currentTheme = 'none';
+        let generatedGIFBlob = null;
 
+        // เริ่มต้นกล้อง
         navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
-            .then(stream => video.srcObject = stream)
-            .catch(err => alert("กรุณาอนุญาตให้เข้าถึงกล้อง"));
+            .then(stream => video.srcObject = stream);
 
-        function setMode(mode, btn) {
-            currentMode = mode;
-            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
+        // 1. ระบบถ่ายภาพ (ถ่าย 4 รูปเสมอ เพื่อความยืดหยุ่น)
+        async function startCameraSequence() {
+            photos = [];
+            document.querySelector('.btn-capture').style.display = 'none';
+            
+            for (let i = 0; i < 4; i++) {
+                await doCountdown(3);
+                const shot = captureFrame();
+                photos.push(shot);
+                
+                // Flash Effect
+                const flash = document.createElement('div');
+                flash.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:white;z-index:99;transition:opacity 0.2s;";
+                cameraPage.appendChild(flash);
+                setTimeout(() => flash.style.opacity = 0, 50);
+                setTimeout(() => flash.remove(), 250);
 
-        function setColor(color, btn) {
-            frameColor = color;
-            document.querySelectorAll('.btn-color').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        async function startPhotoProcess() {
-            capturedImages = [];
-            btnStart.disabled = true;
-            resultArea.style.display = 'none';
-            qrDiv.innerHTML = "";
-            gifSection.style.display = 'none';
-            qrStatus.innerText = "รอสักครู่...";
-
-            for (let i = 0; i < currentMode; i++) {
-                await countdown(3);
-                captureShot();
-                if (i < currentMode - 1) await delay(1000);
+                if (i < 3) await new Promise(r => setTimeout(r, 1000));
             }
 
-            processFinalImage();
-            
-            if (currentMode === 4) {
-                createGIF();
-            }
-            
-            btnStart.disabled = false;
+            // เตรียม GIF ไว้เบื้องหลัง
+            createGIF();
+
+            // เปลี่ยนหน้าไป Editor
+            cameraPage.style.display = 'none';
+            editorArea.style.display = 'flex';
+            renderCanvas(); // วาดรูปรอบแรก
         }
 
-        function countdown(sec) {
+        function captureFrame() {
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = video.videoWidth;
+            tCanvas.height = video.videoHeight;
+            const tCtx = tCanvas.getContext('2d');
+            tCtx.translate(tCanvas.width, 0);
+            tCtx.scale(-1, 1);
+            tCtx.drawImage(video, 0, 0);
+            return tCanvas;
+        }
+
+        function doCountdown(sec) {
             return new Promise(resolve => {
                 countdownEl.style.display = 'block';
                 let c = sec;
@@ -235,134 +172,183 @@
             });
         }
 
-        function captureShot() {
-            const tCanvas = document.createElement('canvas');
-            tCanvas.width = video.videoWidth;
-            tCanvas.height = video.videoHeight;
-            const tCtx = tCanvas.getContext('2d');
-            tCtx.translate(tCanvas.width, 0);
-            tCtx.scale(-1, 1);
-            tCtx.drawImage(video, 0, 0);
-            capturedImages.push(tCanvas);
-            
-            flashEl.style.opacity = 1;
-            setTimeout(() => flashEl.style.opacity = 0, 150);
-        }
-
-        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-        function processFinalImage() {
-            const padding = 40;
-            const gap = 20;
+        // 2. ระบบวาด Layout (Editor Core)
+        function renderCanvas() {
+            const padding = 30;
+            const gap = 15;
             const imgW = 640;
             const imgH = 480;
+            
+            let totalW, totalH;
 
-            const totalW = imgW + (padding * 2);
-            const totalH = (currentMode === 1) 
-                ? imgH + (padding * 2) + 120 
-                : (imgH * 4) + (gap * 3) + (padding * 2) + 120;
+            // ตั้งค่าขนาด Canvas ตาม Layout
+            if (currentLayout === 'strip4') {
+                totalW = imgW + (padding * 2);
+                totalH = (imgH * 4) + (gap * 3) + (padding * 2) + 100;
+            } else if (currentLayout === 'grid4') {
+                totalW = (imgW * 2) + gap + (padding * 2);
+                totalH = (imgH * 2) + gap + (padding * 2) + 100;
+            } else if (currentLayout === 'strip3') {
+                totalW = imgW + (padding * 2);
+                totalH = (imgH * 3) + (gap * 2) + (padding * 2) + 100;
+            } else if (currentLayout === 'cut2') {
+                totalW = imgW + (padding * 2);
+                totalH = (imgH * 2) + gap + (padding * 2) + 100;
+            }
 
             canvas.width = totalW;
             canvas.height = totalH;
 
-            // 1. เทสีพื้นหลัง
-            ctx.fillStyle = frameColor;
+            // เทสีพื้นหลัง
+            ctx.fillStyle = (currentTheme === 'love') ? '#fab1a0' : 
+                            (currentTheme === 'cool') ? '#2d3436' :
+                            (currentTheme === 'cute') ? '#ffeaa7' : 'white';
             ctx.fillRect(0, 0, totalW, totalH);
 
-            // 2. วาดลวดลายหัวใจตกแต่ง (Random Hearts) 💖
-            drawDecorations(ctx, totalW, totalH);
+            // วาดรูปตามตำแหน่ง
+            photos.forEach((img, i) => {
+                let x, y;
+                
+                if (currentLayout === 'strip4') {
+                    x = padding;
+                    y = padding + (i * (imgH + gap));
+                } else if (currentLayout === 'grid4') {
+                    let row = Math.floor(i / 2);
+                    let col = i % 2;
+                    x = padding + (col * (imgW + gap));
+                    y = padding + (row * (imgH + gap));
+                } else if (currentLayout === 'strip3') {
+                    if (i > 2) return; // เอาแค่ 3 รูป
+                    x = padding;
+                    y = padding + (i * (imgH + gap));
+                } else if (currentLayout === 'cut2') {
+                    if (i > 1) return; // เอาแค่ 2 รูป
+                    x = padding;
+                    y = padding + (i * (imgH + gap));
+                }
 
-            // 3. วางรูปภาพ
-            capturedImages.forEach((img, i) => {
-                const y = padding + (i * (imgH + gap));
-                // สร้างกรอบขาวรอบรูปนิดนึงเพื่อให้รูปเด้ง
-                ctx.fillStyle = "white";
-                ctx.fillRect(padding - 5, y - 5, imgW + 10, imgH + 10);
-                ctx.drawImage(img, padding, y, imgW, imgH);
+                // วาดกรอบรูปเล็กๆ
+                ctx.fillStyle = 'white';
+                ctx.fillRect(x - 5, y - 5, imgW + 10, imgH + 10);
+                ctx.drawImage(img, x, y, imgW, imgH);
             });
 
-            // 4. เขียนข้อความ
-            ctx.fillStyle = (frameColor === 'white' || frameColor === '#fab1a0') ? '#d63031' : 'white';
+            // วาด Decorations (Theme)
+            drawDecorations(totalW, totalH);
+
+            // วาด Text Footer
+            ctx.fillStyle = (currentTheme === 'cool') ? 'white' : '#d63031';
             ctx.font = 'bold 40px Mali';
             ctx.textAlign = 'center';
-            ctx.fillText(customTitle, totalW / 2, totalH - 70);
-            
-            ctx.font = '25px Mali';
-            ctx.fillText(subTitle, totalW / 2, totalH - 30);
-
-            resultArea.style.display = 'flex';
-            resultArea.scrollIntoView({ behavior: 'smooth' });
-
-            uploadToServer(canvas.toDataURL('image/png'));
+            const title = (currentTheme === 'love') ? "Happy Valentine's" : "CVC-NU 2024";
+            ctx.fillText(title, totalW / 2, totalH - 40);
         }
 
-        // ฟังก์ชันวาดสติกเกอร์หัวใจ
-        function drawDecorations(ctx, w, h) {
-            const emojis = ['❤️', '💖', '🌹', '🧸', '💌', '💘'];
-            ctx.font = '40px Arial';
-            // สุ่มแปะตามขอบๆ
-            for(let i=0; i<15; i++) {
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                const x = Math.random() * w;
-                const y = Math.random() * h;
-                
-                // อย่าบังรูปตรงกลาง (เว้นที่ตรงกลางไว้)
-                if (x < 50 || x > w - 50 || y < 50 || y > h - 150) {
-                     ctx.save();
-                     ctx.translate(x, y);
-                     ctx.rotate((Math.random() - 0.5) * 1); // หมุนนิดๆ
-                     ctx.fillText(randomEmoji, 0, 0);
-                     ctx.restore();
-                }
+        function drawDecorations(w, h) {
+            if (currentTheme === 'none') return;
+
+            const emojis = (currentTheme === 'love') ? ['❤️', '🌹', '💋'] :
+                           (currentTheme === 'cute') ? ['🧸', '⭐', '🌈'] :
+                           ['😎', '⚡', '🔥']; // cool
+
+            ctx.font = '50px Arial';
+            // สุ่มตำแหน่ง Emoji (ใช้ Seed เดิมเพื่อให้ไม่กระพริบเวลาเปลี่ยน layout)
+            // ในที่นี้สุ่มง่ายๆ ไปก่อน
+            for(let i=0; i<8; i++) {
+                const emo = emojis[i % emojis.length];
+                // วาดตามขอบ
+                ctx.fillText(emo, 20, 100 + (i*150)); 
+                ctx.fillText(emo, w - 60, 100 + (i*150));
             }
         }
 
+        // 3. User Interaction Functions
+        function changeLayout(layout, btn) {
+            currentLayout = layout;
+            updateActiveButton(btn, btn.parentNode);
+            renderCanvas();
+        }
+
+        function changeTheme(theme, btn) {
+            currentTheme = theme;
+            updateActiveButton(btn, btn.parentNode);
+            renderCanvas();
+        }
+
+        function updateActiveButton(target, parent) {
+            parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            target.classList.add('active');
+        }
+
+        // 4. สร้าง GIF (เบื้องหลัง)
         function createGIF() {
-            const images = capturedImages.map(c => c.toDataURL());
-            
+            const images = photos.map(c => c.toDataURL());
             gifshot.createGIF({
                 images: images,
                 interval: 0.5,
-                gifWidth: 320, 
+                gifWidth: 320,
                 numFrames: 10
             }, function(obj) {
                 if(!obj.error) {
-                    gifPreview.src = obj.image;
-                    gifSection.style.display = 'block';
-                    
-                    // ตั้งค่าปุ่มดาวน์โหลด GIF ตรงนี้
-                    gifDownloadBtn.href = obj.image;
+                    generatedGIFBlob = obj.image; // เก็บ Base64 GIF ไว้รออัปโหลด
                 }
             });
         }
 
-        async function uploadToServer(dataUrl) {
-            qrStatus.innerText = "⏳ กำลังอัปโหลดรูป...";
+        // 5. Upload Process (Upload Image -> Upload GIF -> Show QR)
+        async function uploadFiles() {
+            if (!generatedGIFBlob) { alert("รอ GIF ประมวลผลสักครู่..."); return; }
             
+            btnUpload.disabled = true;
+            qrArea.style.display = 'block';
+            statusText.innerText = "1/2 กำลังอัปโหลดรูปภาพ...";
+
             try {
-                const res = await fetch('/api/upload', {
+                // 5.1 Upload PNG
+                const pngData = canvas.toDataURL('image/png');
+                const resImg = await fetch('/api/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: dataUrl })
+                    body: JSON.stringify({ image: pngData, type: 'png' })
                 });
+                const dataImg = await resImg.json();
 
-                const data = await res.json();
+                // 5.2 Upload GIF
+                statusText.innerText = "2/2 กำลังอัปโหลด GIF...";
+                const resGif = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: generatedGIFBlob, type: 'gif' })
+                });
+                const dataGif = await resGif.json();
 
-                if (data.url) {
-                    qrStatus.innerText = "✅ สแกนเพื่อรับรูป (Strip)";
-                    new QRCode(qrDiv, { text: data.url, width: 150, height: 150 });
-                } else {
-                    throw new Error("Upload Failed");
+                // 5.3 Generate QR (ชี้ไปที่รูปภาพหลัก)
+                if (dataImg.url && dataGif.url) {
+                    statusText.innerText = "✅ อัปโหลดเสร็จสิ้น!";
+                    statusText.style.color = "green";
+                    statusText.style.animation = "none";
+                    
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById('qrcode'), {
+                        text: dataImg.url, // QR ชี้ไปที่รูป
+                        width: 150, height: 150
+                    });
+
+                    // ปุ่มกดดาวน์โหลดแยก
+                    document.getElementById('link-buttons').style.display = 'flex';
+                    document.getElementById('dl-img').href = dataImg.url;
+                    document.getElementById('dl-gif').href = dataGif.url;
                 }
+
             } catch (err) {
                 console.error(err);
-                qrStatus.innerText = "❌ เกิดข้อผิดพลาดในการอัปโหลด";
+                statusText.innerText = "❌ เกิดข้อผิดพลาด";
+                btnUpload.disabled = false;
             }
         }
 
         function resetBooth() {
-            resultArea.style.display = 'none';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            location.reload();
         }
     </script>
 </body>
