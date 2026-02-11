@@ -3,46 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Photobooth</title>
+    <title>Valentine Photobooth</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&family=Mali:wght@600&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #ff4757; --bg: #2f3542; --panel: #ffffff; }
-        body { font-family: 'Kanit', sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        h1 { color: white; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 1000px; width: 100%; }
+        :root {
+            --primary: #ff4757; /* สีแดงวาเลนไทน์ */
+            --secondary: #ff7675; /* สีชมพู */
+            --bg: #ffeaa7; /* สีพื้นหลังครีมๆ */
+            --panel: #ffffff;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #ffcccc; /* พื้นหลังชมพูอ่อน */
+            background-image: radial-gradient(#ff9999 2px, transparent 2px);
+            background-size: 30px 30px;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { 
+            font-family: 'Mali', cursive;
+            color: #d63031; 
+            margin-bottom: 10px; 
+            text-shadow: 2px 2px 0px white;
+            font-size: 2.5rem;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1000px;
+            width: 100%;
+        }
         
         /* Camera */
-        .camera-box { background: #000; border-radius: 15px; overflow: hidden; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 480px; aspect-ratio: 4/3; }
+        .camera-box {
+            background: #000;
+            border: 8px solid white;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.3);
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 4/3;
+        }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .countdown { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 8rem; color: white; font-weight: bold; display: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .countdown { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-size: 8rem; color: #ff4757; 
+            font-family: 'Mali', cursive;
+            font-weight: bold; 
+            text-shadow: 3px 3px 0px white;
+            display: none; z-index: 10; 
+        }
         .flash { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: white; opacity: 0; pointer-events: none; transition: opacity 0.1s; }
 
         /* Controls */
-        .controls { background: var(--panel); padding: 20px; border-radius: 15px; width: 100%; max-width: 440px; }
-        .btn-group { margin-bottom: 15px; }
-        .label { font-size: 0.9rem; color: #666; margin-bottom: 5px; display: block; }
-        button { border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-family: 'Kanit', sans-serif; margin-right: 5px; transition: 0.2s; }
-        .btn-mode { background: #eee; color: #333; }
-        .btn-mode.active { background: var(--primary); color: white; }
-        .btn-color { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #ddd; padding: 0; }
-        .btn-color.active { transform: scale(1.1); border-color: #333; }
-        .btn-capture { width: 100%; background: var(--primary); color: white; font-size: 1.2rem; padding: 15px; margin-top: 10px; font-weight: bold; }
-        .btn-capture:disabled { background: #ccc; cursor: not-allowed; }
+        .controls { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-group { margin-bottom: 20px; }
+        .label { font-size: 1rem; color: #d63031; margin-bottom: 8px; display: block; font-weight: bold; }
+        
+        button { border: none; padding: 12px 18px; border-radius: 12px; cursor: pointer; font-family: 'Kanit', sans-serif; margin-right: 5px; transition: 0.2s; font-size: 1rem;}
+        .btn-mode { background: #ffeaa7; color: #d63031; }
+        .btn-mode.active { background: var(--primary); color: white; transform: scale(1.05); }
+        
+        .btn-color { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; padding: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-color.active { transform: scale(1.2); border-color: #d63031; }
+
+        .btn-capture { 
+            width: 100%; background: #d63031; color: white; 
+            font-size: 1.5rem; padding: 15px; margin-top: 10px; 
+            font-family: 'Mali', cursive; border-radius: 50px;
+            box-shadow: 0 5px 0 #b71c1c;
+        }
+        .btn-capture:active { transform: translateY(5px); box-shadow: none; }
+        .btn-capture:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
         /* Result */
-        #result-area { display: none; flex-direction: column; align-items: center; background: white; padding: 20px; border-radius: 15px; margin-top: 20px; width: 100%; max-width: 440px; box-sizing: border-box; }
+        #result-area { display: none; flex-direction: column; align-items: center; background: white; padding: 20px; border-radius: 15px; margin-top: 20px; width: 100%; max-width: 440px; box-sizing: border-box; border: 5px dashed #ff7675; }
         #final-canvas { width: 100%; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #gif-preview { width: 100%; border-radius: 5px; margin-top: 10px; display: none; }
-        #qr-container { margin-top: 20px; padding: 15px; background: #f1f2f6; border-radius: 10px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .loading-text { color: #666; font-size: 0.9rem; }
+        
+        #gif-section {
+            margin-top: 15px; width: 100%; text-align: center;
+            background: #fff0f0; padding: 10px; border-radius: 10px; display: none;
+        }
+        #gif-preview { width: 150px; border-radius: 10px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        .btn-download-gif {
+            display: inline-block; background: #0984e3; color: white; 
+            padding: 8px 15px; text-decoration: none; border-radius: 8px; margin-top: 5px; font-size: 0.9rem;
+        }
+
+        #qr-container { margin-top: 20px; padding: 15px; background: #ffeaa7; border-radius: 10px; display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
+        .loading-text { color: #d63031; font-size: 0.9rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>📸 Photobooth Studio</h1>
+    <h1>💖 CVC-NU Valentine 💖</h1>
 
     <div class="container">
         <div class="camera-box">
@@ -53,47 +124,54 @@
 
         <div class="controls">
             <div class="btn-group">
-                <span class="label">1. เลือกโหมด</span>
+                <span class="label">❤️ 1. เลือกโหมด</span>
                 <button class="btn-mode active" onclick="setMode(1, this)">รูปเดี่ยว</button>
                 <button class="btn-mode" onclick="setMode(4, this)">4 ช็อต + GIF</button>
             </div>
 
             <div class="btn-group">
-                <span class="label">2. เลือกสีกรอบ</span>
+                <span class="label">🎨 2. สีพื้นหลัง</span>
                 <button class="btn-color active" style="background:white;" onclick="setColor('white', this)"></button>
-                <button class="btn-color" style="background:#ff7675;" onclick="setColor('#ff7675', this)"></button>
-                <button class="btn-color" style="background:#74b9ff;" onclick="setColor('#74b9ff', this)"></button>
-                <button class="btn-color" style="background:#2d3436;" onclick="setColor('#2d3436', this)"></button>
-            </div>
+                <button class="btn-color" style="background:#fab1a0;" onclick="setColor('#fab1a0', this)"></button> <button class="btn-color" style="background:#ff7675;" onclick="setColor('#ff7675', this)"></button> <button class="btn-color" style="background:#d63031;" onclick="setColor('#d63031', this)"></button> <button class="btn-color" style="background:#2d3436;" onclick="setColor('#2d3436', this)"></button> </div>
 
-            <button id="btn-start" class="btn-capture" onclick="startPhotoProcess()">เริ่มถ่ายภาพ!</button>
+            <button id="btn-start" class="btn-capture" onclick="startPhotoProcess()">ถ่ายรูปเลย! 📸</button>
         </div>
     </div>
 
     <div id="result-area">
-        <h3>✨ รูปของคุณเสร็จแล้ว!</h3>
+        <h3 style="color: #d63031; font-family: 'Mali';">✨ เสร็จแล้วจ้า!</h3>
         <canvas id="final-canvas"></canvas>
-        <img id="gif-preview" alt="GIF Animation">
         
+        <div id="gif-section">
+            <p style="margin:0 0 5px 0; font-size:0.9rem; color:#d63031;">🎞️ ภาพดุ๊กดิ๊ก (GIF)</p>
+            <img id="gif-preview" alt="GIF Animation">
+            <br>
+            <a id="btn-download-gif" class="btn-download-gif" href="#" download="valentine-gif.gif">📥 โหลด GIF</a>
+        </div>
+
         <div id="qr-container">
             <div id="qrcode"></div>
             <p id="qr-status" class="loading-text">กำลังเตรียม QR Code...</p>
         </div>
 
-        <button onclick="resetBooth()" style="background:#dfe6e9; color:#333; margin-top:15px; width:100%;">ถ่ายใหม่อีกครั้ง</button>
+        <button onclick="resetBooth()" style="background:#dfe6e9; color:#636e72; margin-top:15px; width:100%;">🔄 ถ่ายใหม่อีกครั้ง</button>
     </div>
 
     <script>
         // ==========================================
-        // ✏️ แก้ไขข้อความตรงนี้ได้เลยครับ
+        // ✏️ ตั้งค่าข้อความธีมวาเลนไทน์
         // ==========================================
-        const customTitle = "CVC-NU 2024"; // เปลี่ยนเป็นคำที่ต้องการ
+        const customTitle = "Rooted in Love"; 
+        const subTitle = "Happy Valentine's Day"; 
         // ==========================================
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('final-canvas');
         const ctx = canvas.getContext('2d');
+        const gifSection = document.getElementById('gif-section');
         const gifPreview = document.getElementById('gif-preview');
+        const gifDownloadBtn = document.getElementById('btn-download-gif');
+        
         const countdownEl = document.getElementById('countdown');
         const flashEl = document.getElementById('flash');
         const resultArea = document.getElementById('result-area');
@@ -126,7 +204,7 @@
             btnStart.disabled = true;
             resultArea.style.display = 'none';
             qrDiv.innerHTML = "";
-            gifPreview.style.display = 'none';
+            gifSection.style.display = 'none';
             qrStatus.innerText = "รอสักครู่...";
 
             for (let i = 0; i < currentMode; i++) {
@@ -137,7 +215,6 @@
 
             processFinalImage();
             
-            // ถ้าถ่าย 4 ช็อต ให้สร้าง GIF ด้วย
             if (currentMode === 4) {
                 createGIF();
             }
@@ -182,27 +259,36 @@
 
             const totalW = imgW + (padding * 2);
             const totalH = (currentMode === 1) 
-                ? imgH + (padding * 2) + 80 
-                : (imgH * 4) + (gap * 3) + (padding * 2) + 80;
+                ? imgH + (padding * 2) + 120 
+                : (imgH * 4) + (gap * 3) + (padding * 2) + 120;
 
             canvas.width = totalW;
             canvas.height = totalH;
 
+            // 1. เทสีพื้นหลัง
             ctx.fillStyle = frameColor;
             ctx.fillRect(0, 0, totalW, totalH);
 
+            // 2. วาดลวดลายหัวใจตกแต่ง (Random Hearts) 💖
+            drawDecorations(ctx, totalW, totalH);
+
+            // 3. วางรูปภาพ
             capturedImages.forEach((img, i) => {
                 const y = padding + (i * (imgH + gap));
+                // สร้างกรอบขาวรอบรูปนิดนึงเพื่อให้รูปเด้ง
+                ctx.fillStyle = "white";
+                ctx.fillRect(padding - 5, y - 5, imgW + 10, imgH + 10);
                 ctx.drawImage(img, padding, y, imgW, imgH);
             });
 
-            ctx.fillStyle = (frameColor === 'white') ? '#333' : 'white';
-            ctx.font = 'bold 30px Kanit';
+            // 4. เขียนข้อความ
+            ctx.fillStyle = (frameColor === 'white' || frameColor === '#fab1a0') ? '#d63031' : 'white';
+            ctx.font = 'bold 40px Mali';
             ctx.textAlign = 'center';
-            // ใช้ตัวแปรชื่อ customTitle ที่เราตั้งไว้ข้างบน
-            ctx.fillText(customTitle, totalW / 2, totalH - 45);
-            ctx.font = '20px Kanit';
-            ctx.fillText(new Date().toLocaleDateString('th-TH'), totalW / 2, totalH - 20);
+            ctx.fillText(customTitle, totalW / 2, totalH - 70);
+            
+            ctx.font = '25px Mali';
+            ctx.fillText(subTitle, totalW / 2, totalH - 30);
 
             resultArea.style.display = 'flex';
             resultArea.scrollIntoView({ behavior: 'smooth' });
@@ -210,20 +296,42 @@
             uploadToServer(canvas.toDataURL('image/png'));
         }
 
+        // ฟังก์ชันวาดสติกเกอร์หัวใจ
+        function drawDecorations(ctx, w, h) {
+            const emojis = ['❤️', '💖', '🌹', '🧸', '💌', '💘'];
+            ctx.font = '40px Arial';
+            // สุ่มแปะตามขอบๆ
+            for(let i=0; i<15; i++) {
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                
+                // อย่าบังรูปตรงกลาง (เว้นที่ตรงกลางไว้)
+                if (x < 50 || x > w - 50 || y < 50 || y > h - 150) {
+                     ctx.save();
+                     ctx.translate(x, y);
+                     ctx.rotate((Math.random() - 0.5) * 1); // หมุนนิดๆ
+                     ctx.fillText(randomEmoji, 0, 0);
+                     ctx.restore();
+                }
+            }
+        }
+
         function createGIF() {
-            // ดึงภาพจากที่ถ่ายไว้มาทำ GIF
             const images = capturedImages.map(c => c.toDataURL());
             
             gifshot.createGIF({
                 images: images,
-                interval: 0.5, // ความเร็ว (วินาทีต่อภาพ)
-                gifWidth: 320, // ลดขนาดลงหน่อยจะได้ไม่หนัก
+                interval: 0.5,
+                gifWidth: 320, 
                 numFrames: 10
             }, function(obj) {
                 if(!obj.error) {
                     gifPreview.src = obj.image;
-                    gifPreview.style.display = 'block';
-                    // หมายเหตุ: GIF ไม่ได้ถูกอัปโหลดไป Server ในเวอร์ชันนี้เพื่อประหยัดพื้นที่
+                    gifSection.style.display = 'block';
+                    
+                    // ตั้งค่าปุ่มดาวน์โหลด GIF ตรงนี้
+                    gifDownloadBtn.href = obj.image;
                 }
             });
         }
@@ -232,7 +340,6 @@
             qrStatus.innerText = "⏳ กำลังอัปโหลดรูป...";
             
             try {
-                // เรียก API ที่เราย้ายเข้าไปในโฟลเดอร์ api/ แล้ว
                 const res = await fetch('/api/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -242,7 +349,7 @@
                 const data = await res.json();
 
                 if (data.url) {
-                    qrStatus.innerText = "✅ สแกนเพื่อดาวน์โหลด";
+                    qrStatus.innerText = "✅ สแกนเพื่อรับรูป (Strip)";
                     new QRCode(qrDiv, { text: data.url, width: 150, height: 150 });
                 } else {
                     throw new Error("Upload Failed");
