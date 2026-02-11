@@ -3,7 +3,7 @@ import { put } from '@vercel/blob';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '4mb', // เพิ่มขนาดให้รับรูปใหญ่ได้
+      sizeLimit: '10mb', // เพิ่มขนาดรองรับ GIF ไฟล์ใหญ่
     },
   },
 };
@@ -14,27 +14,30 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { image } = request.body;
+    const { image, type } = request.body; // รับค่า type เพิ่ม (png หรือ gif)
 
     if (!image) {
       return response.status(400).json({ error: 'No image provided' });
     }
 
-    // แปลง Base64 กลับเป็น Binary Buffer
+    // ตรวจสอบประเภทไฟล์
+    const fileType = type === 'gif' ? 'gif' : 'png';
+    const contentType = type === 'gif' ? 'image/gif' : 'image/png';
+
+    // แปลง Base64
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // ตั้งชื่อไฟล์ไม่ให้ซ้ำ (ใช้เวลาปัจจุบัน)
-    const filename = `photo-${Date.now()}.png`;
+    // ตั้งชื่อไฟล์
+    const filename = `photo-${Date.now()}.${fileType}`;
 
     // อัปโหลดขึ้น Vercel Blob
     const blob = await put(filename, buffer, {
       access: 'public',
-      contentType: 'image/png',
-      // token: process.env.BLOB_READ_WRITE_TOKEN (Vercel ใส่ให้อัตโนมัติ)
+      contentType: contentType,
+      token: process.env.BLOB_READ_WRITE_TOKEN
     });
 
-    // ส่งลิงก์กลับไปให้หน้าเว็บ
     return response.status(200).json({ url: blob.url });
 
   } catch (error) {
