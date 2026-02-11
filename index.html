@@ -54,7 +54,7 @@
 </head>
 <body>
 
-    <h1>📸 Valentine Photobooth 🥰 </h1>
+    <h1>📸 Valentine Photobooth</h1>
 
     <div id="camera-page" class="stage">
         <video id="video" autoplay playsinline></video>
@@ -104,6 +104,13 @@
     </div>
 
     <script>
+        // ===============================================
+        // ✏️ แก้ไขข้อความตรงนี้ได้เลยครับ (Text Config)
+        // ===============================================
+        const TEXT_VALENTINE = "ROOTED IN LOVE 2026";  // ข้อความสำหรับธีมวาเลนไทน์
+        const TEXT_NORMAL    = "ROOTED IN LOVE 2026";        // ข้อความสำหรับธีมปกติ
+        // ===============================================
+
         const video = document.getElementById('video');
         const editorArea = document.getElementById('editor-area');
         const cameraPage = document.getElementById('camera-page');
@@ -119,24 +126,18 @@
         let currentLayout = 'strip4';
         let currentTheme = 'none';
         let generatedGIFBlob = null;
-        
-        // ตัวแปรเก็บลิงก์หลังจากอัปโหลดเสร็จ
         let finalImageUrl = "";
         let finalGifUrl = "";
 
-        // เริ่มกล้อง
         navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
             .then(stream => video.srcObject = stream);
 
-        // --- ระบบถ่ายภาพ ---
         async function startCameraSequence() {
             photos = [];
-            
             for (let i = 0; i < 4; i++) {
                 await doCountdown(3);
                 photos.push(captureFrame());
                 
-                // Flash Animation
                 const flash = document.createElement('div');
                 flash.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:white;z-index:99;transition:opacity 0.2s;";
                 cameraPage.appendChild(flash);
@@ -145,8 +146,7 @@
 
                 if (i < 3) await new Promise(r => setTimeout(r, 1000));
             }
-
-            createGIF(); // สร้าง GIF รอไว้เลย
+            createGIF(); 
             cameraPage.style.display = 'none';
             editorArea.style.display = 'flex';
             renderCanvas();
@@ -186,10 +186,9 @@
             
             let totalW, totalH;
 
-            // กำหนดขนาดตาม Layout
             if (currentLayout === 'strip4') {
                 totalW = imgW + (padding * 2);
-                totalH = (imgH * 4) + (gap * 3) + (padding * 2) + 120; // +120 พื้นที่ Footer
+                totalH = (imgH * 4) + (gap * 3) + (padding * 2) + 120; 
             } else if (currentLayout === 'grid4') {
                 totalW = (imgW * 2) + gap + (padding * 2);
                 totalH = (imgH * 2) + gap + (padding * 2) + 120;
@@ -204,19 +203,18 @@
             canvas.width = totalW;
             canvas.height = totalH;
 
-            // 1. ลงสีพื้นหลัง
+            // 1. ลงสีพื้นหลัง (Layer 1: ล่างสุด)
             ctx.fillStyle = (currentTheme === 'love') ? '#ffcccc' : 
                             (currentTheme === 'cool') ? '#2d3436' :
                             (currentTheme === 'cute') ? '#ffeaa7' : 'white';
             ctx.fillRect(0, 0, totalW, totalH);
 
-            // 2. วาดลวดลาย (Decorations)
-            drawDecorations(totalW, totalH);
+            // ❌ ย้าย Decorations (Emoji) ออกจากตรงนี้
+            // drawDecorations(totalW, totalH); 
 
-            // 3. วาดรูปภาพ
+            // 2. วาดรูปภาพ (Layer 2: ตรงกลาง)
             photos.forEach((img, i) => {
                 let x, y;
-                // คำนวณตำแหน่ง X, Y ตาม Layout
                 if (currentLayout === 'strip4') {
                     x = padding; y = padding + (i * (imgH + gap));
                 } else if (currentLayout === 'grid4') {
@@ -231,23 +229,29 @@
                     x = padding; y = padding + (i * (imgH + gap));
                 }
 
-                // กรอบขาวรอบรูป
                 ctx.fillStyle = 'white';
                 ctx.fillRect(x - 5, y - 5, imgW + 10, imgH + 10);
                 ctx.drawImage(img, x, y, imgW, imgH);
             });
 
-            // 4. ข้อความด้านล่าง
+            // ✅ 3. วาด Decorations (Emoji) ที่นี่แทน (Layer 3: บนสุด)
+            // วาดทับรูปภาพไปเลย
+            drawDecorations(totalW, totalH);
+
+            // 4. ข้อความด้านล่าง (Layer 4: บนสุดกว่า)
             ctx.fillStyle = (currentTheme === 'cool') ? 'white' : '#d63031';
             ctx.font = 'bold 40px Mali';
             ctx.textAlign = 'center';
-            const title = (currentTheme === 'love') ? "Happy Valentine's" : "CVC-NU 2024";
+            
+            // --- ตรงนี้ครับที่เลือกข้อความมาแสดง ---
+            const title = (currentTheme === 'love') ? TEXT_VALENTINE : TEXT_NORMAL;
+            // ------------------------------------
+            
             ctx.fillText(title, totalW / 2, totalH - 50);
             ctx.font = '20px Kanit';
             ctx.fillText(new Date().toLocaleDateString('th-TH'), totalW / 2, totalH - 20);
         }
 
-        // --- ฟังก์ชันวาดลาย (แก้ไขให้เต็มจอ) ---
         function drawDecorations(w, h) {
             if (currentTheme === 'none') return;
 
@@ -256,15 +260,11 @@
                            ['😎', '⚡', '🔥'];
 
             ctx.font = '50px Arial';
-            
-            // คำนวณจำนวนแถวของสติกเกอร์ตามความสูงของภาพ (h)
-            // ยิ่งภาพยาวยิ่งวนลูปเยอะ ไม่หยุดแค่ 8 รอบแล้ว
             const steps = Math.floor(h / 150); 
 
             for(let i=0; i < steps; i++) {
                 const emo = emojis[i % emojis.length];
-                
-                // สลับซ้ายขวาแบบฟันปลา
+                // วาด Emoji ให้อยู่ด้านบน
                 if (i % 2 === 0) {
                      ctx.fillText(emo, 20, 100 + (i*150)); 
                 } else {
@@ -285,7 +285,6 @@
             });
         }
 
-        // --- ระบบอัปโหลดและ QR ---
         async function uploadFiles() {
             if (!generatedGIFBlob) { alert("กำลังประมวลผล GIF... รอสักครู่แล้วกดใหม่ครับ"); return; }
             
@@ -295,7 +294,6 @@
             statusText.innerText = "1/2 กำลังอัปโหลดรูปภาพ...";
 
             try {
-                // 1. Upload Image
                 const pngData = canvas.toDataURL('image/png');
                 const resImg = await fetch('/api/upload', {
                     method: 'POST',
@@ -305,7 +303,6 @@
                 const dataImg = await resImg.json();
                 finalImageUrl = dataImg.url;
 
-                // 2. Upload GIF
                 statusText.innerText = "2/2 กำลังอัปโหลด GIF...";
                 const resGif = await fetch('/api/upload', {
                     method: 'POST',
@@ -315,14 +312,11 @@
                 const dataGif = await resGif.json();
                 finalGifUrl = dataGif.url;
 
-                // 3. แสดง QR Code
                 if (finalImageUrl && finalGifUrl) {
                     statusText.innerText = "✅ อัปโหลดเสร็จสิ้น!";
                     statusText.style.color = "green";
                     statusText.style.animation = "none";
-                    qrSwitcher.style.display = "flex"; // โชว์ปุ่มสลับ
-
-                    // เริ่มต้นโชว์ QR รูปภาพก่อน
+                    qrSwitcher.style.display = "flex"; 
                     generateQR(finalImageUrl);
                 }
 
@@ -333,11 +327,9 @@
             }
         }
 
-        // ฟังก์ชันสลับ QR Code
         function showQR(type, btn) {
             document.querySelectorAll('.qr-btn').forEach(b => b.classList.remove('active'));
             if(btn) btn.classList.add('active');
-
             if (type === 'img') generateQR(finalImageUrl);
             else if (type === 'gif') generateQR(finalGifUrl);
         }
