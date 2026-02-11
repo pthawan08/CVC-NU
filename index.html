@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valentine Photo Booth</title>
+    <title>Valentine Photo Booth Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Kanit:wght@300;500&display=swap" rel="stylesheet">
@@ -29,6 +29,13 @@
 
         .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
         
+        /* Camera Select Dropdown */
+        select.camera-select {
+            padding: 8px 15px; border-radius: 20px; border: 2px solid #ff7675;
+            font-family: 'Kanit'; font-size: 0.9rem; color: #d63031; background: white;
+            cursor: pointer; width: 80%; max-width: 300px;
+        }
+
         button { border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Kanit'; font-size: 0.9rem; transition: 0.2s; background: #eee; color: #555; }
         button:hover { background: #ddd; }
         button.active { background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.4); }
@@ -62,6 +69,13 @@
         <div style="position:absolute; bottom:20px; width:100%; text-align:center;">
             <button class="btn-capture action-btn" onclick="startCameraSequence()" style="width:80%; box-shadow: 0 5px 0 #b71c1c;">ถ่ายรูปเลย! (4 ช็อต)</button>
         </div>
+    </div>
+    
+    <div id="camera-select-area" style="margin-top: 15px; text-align: center; width: 100%;">
+        <span class="label" style="font-size: 0.9rem;">🎥 เปลี่ยนกล้อง:</span>
+        <select id="camera-select" class="camera-select" onchange="changeCameraSource()">
+            <option value="">กำลังค้นหากล้อง...</option>
+        </select>
     </div>
 
     <div id="editor-area">
@@ -104,16 +118,14 @@
     </div>
 
     <script>
-        // ===============================================
-        // ✏️ แก้ไขข้อความตรงนี้ได้เลยครับ (Text Config)
-        // ===============================================
-        const TEXT_VALENTINE = "ROOTED IN LOVE 2026 NU";  // ข้อความสำหรับธีมวาเลนไทน์
-        const TEXT_NORMAL    = "ROOTED IN LOVE 2026 NU";        // ข้อความสำหรับธีมปกติ
-        // ===============================================
+        // Config Text
+        const TEXT_VALENTINE = "ROOTED IN LOVE 2026 NU"; 
+        const TEXT_NORMAL    = "ROOTED IN LOVE 2026 NU";
 
         const video = document.getElementById('video');
         const editorArea = document.getElementById('editor-area');
         const cameraPage = document.getElementById('camera-page');
+        const cameraSelectArea = document.getElementById('camera-select-area');
         const canvas = document.getElementById('final-canvas');
         const ctx = canvas.getContext('2d');
         const countdownEl = document.getElementById('countdown');
@@ -121,6 +133,7 @@
         const statusText = document.getElementById('status-text');
         const btnUpload = document.getElementById('btn-upload');
         const qrSwitcher = document.getElementById('qr-switcher');
+        const cameraDropdown = document.getElementById('camera-select');
 
         let photos = [];
         let currentLayout = 'strip4';
@@ -128,12 +141,61 @@
         let generatedGIFBlob = null;
         let finalImageUrl = "";
         let finalGifUrl = "";
+        let currentStream = null;
 
-        navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
-            .then(stream => video.srcObject = stream);
+        // เริ่มต้น: ขอสิทธิ์กล้องก่อน แล้วค่อยโหลดรายชื่อกล้อง
+        initCamera();
+
+        async function initCamera() {
+            try {
+                // ขอสิทธิ์เปิดกล้องตัวแรกก่อน
+                await startStream(); 
+                // พอได้สิทธิ์แล้ว ค่อยลิสต์รายชื่อกล้องทั้งหมดมาใส่ Dropdown
+                await getCameraDevices();
+            } catch (err) {
+                alert("กรุณาอนุญาตให้ใช้กล้อง");
+            }
+        }
+
+        async function startStream(deviceId = null) {
+            // หยุดกล้องตัวเก่าก่อน (ถ้ามี)
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = { 
+                video: deviceId ? { deviceId: { exact: deviceId } } : { width: 1280, height: 720 }
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            currentStream = stream;
+            video.srcObject = stream;
+        }
+
+        async function getCameraDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            cameraDropdown.innerHTML = '';
+            
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Camera ${index + 1}`;
+                cameraDropdown.appendChild(option);
+            });
+        }
+
+        function changeCameraSource() {
+            const selectedDeviceId = cameraDropdown.value;
+            startStream(selectedDeviceId);
+        }
 
         async function startCameraSequence() {
             photos = [];
+            // ซ่อนปุ่มเปลี่ยนกล้องตอนกำลังถ่าย
+            cameraSelectArea.style.display = 'none';
+            
             for (let i = 0; i < 4; i++) {
                 await doCountdown(3);
                 photos.push(captureFrame());
@@ -177,7 +239,6 @@
             });
         }
 
-        // --- ระบบวาดภาพ (Editor) ---
         function renderCanvas() {
             const padding = 30;
             const gap = 15;
@@ -203,16 +264,11 @@
             canvas.width = totalW;
             canvas.height = totalH;
 
-            // 1. ลงสีพื้นหลัง (Layer 1: ล่างสุด)
             ctx.fillStyle = (currentTheme === 'love') ? '#ffcccc' : 
                             (currentTheme === 'cool') ? '#2d3436' :
                             (currentTheme === 'cute') ? '#ffeaa7' : 'white';
             ctx.fillRect(0, 0, totalW, totalH);
 
-            // ❌ ย้าย Decorations (Emoji) ออกจากตรงนี้
-            // drawDecorations(totalW, totalH); 
-
-            // 2. วาดรูปภาพ (Layer 2: ตรงกลาง)
             photos.forEach((img, i) => {
                 let x, y;
                 if (currentLayout === 'strip4') {
@@ -234,19 +290,12 @@
                 ctx.drawImage(img, x, y, imgW, imgH);
             });
 
-            // ✅ 3. วาด Decorations (Emoji) ที่นี่แทน (Layer 3: บนสุด)
-            // วาดทับรูปภาพไปเลย
             drawDecorations(totalW, totalH);
 
-            // 4. ข้อความด้านล่าง (Layer 4: บนสุดกว่า)
             ctx.fillStyle = (currentTheme === 'cool') ? 'white' : '#d63031';
             ctx.font = 'bold 40px Mali';
             ctx.textAlign = 'center';
-            
-            // --- ตรงนี้ครับที่เลือกข้อความมาแสดง ---
             const title = (currentTheme === 'love') ? TEXT_VALENTINE : TEXT_NORMAL;
-            // ------------------------------------
-            
             ctx.fillText(title, totalW / 2, totalH - 50);
             ctx.font = '20px Kanit';
             ctx.fillText(new Date().toLocaleDateString('th-TH'), totalW / 2, totalH - 20);
@@ -254,22 +303,14 @@
 
         function drawDecorations(w, h) {
             if (currentTheme === 'none') return;
-
             const emojis = (currentTheme === 'love') ? ['💐', '💖', '🥰'] :
-                           (currentTheme === 'cute') ? ['🧸', '⭐', '🌈'] :
-                           ['😎', '⚡', '🔥'];
-
+                           (currentTheme === 'cute') ? ['🧸', '⭐', '🌈'] : ['😎', '⚡', '🔥'];
             ctx.font = '50px Arial';
             const steps = Math.floor(h / 150); 
-
             for(let i=0; i < steps; i++) {
                 const emo = emojis[i % emojis.length];
-                // วาด Emoji ให้อยู่ด้านบน
-                if (i % 2 === 0) {
-                     ctx.fillText(emo, 20, 100 + (i*150)); 
-                } else {
-                     ctx.fillText(emo, w - 70, 100 + (i*150));
-                }
+                if (i % 2 === 0) ctx.fillText(emo, 20, 100 + (i*150)); 
+                else ctx.fillText(emo, w - 70, 100 + (i*150));
             }
         }
 
@@ -287,12 +328,10 @@
 
         async function uploadFiles() {
             if (!generatedGIFBlob) { alert("กำลังประมวลผล GIF... รอสักครู่แล้วกดใหม่ครับ"); return; }
-            
             btnUpload.disabled = true;
             qrArea.style.display = 'block';
             qrArea.scrollIntoView({ behavior: 'smooth' });
             statusText.innerText = "1/2 กำลังอัปโหลดรูปภาพ...";
-
             try {
                 const pngData = canvas.toDataURL('image/png');
                 const resImg = await fetch('/api/upload', {
@@ -319,7 +358,6 @@
                     qrSwitcher.style.display = "flex"; 
                     generateQR(finalImageUrl);
                 }
-
             } catch (err) {
                 console.error(err);
                 statusText.innerText = "❌ เกิดข้อผิดพลาดในการอัปโหลด";
@@ -337,11 +375,7 @@
         function generateQR(url) {
             const container = document.getElementById('qrcode');
             container.innerHTML = "";
-            new QRCode(container, {
-                text: url,
-                width: 180,
-                height: 180
-            });
+            new QRCode(container, { text: url, width: 180, height: 180 });
         }
 
         function changeLayout(layout, btn) {
@@ -349,18 +383,15 @@
             updateActiveButton(btn);
             renderCanvas();
         }
-
         function changeTheme(theme, btn) {
             currentTheme = theme;
             updateActiveButton(btn);
             renderCanvas();
         }
-
         function updateActiveButton(btn) {
             btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
-
         function resetBooth() {
             location.reload();
         }
